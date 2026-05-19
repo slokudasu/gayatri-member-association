@@ -59,8 +59,9 @@ public class RestaurantAuthController {
     private SubscriptionAmountConfigService subscriptionAmountConfigService;
 
     @GetMapping("/")
-    public String root(HttpSession session) {
-        if (session.getAttribute("restaurantUserId") != null) {
+    public String root(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("restaurantUserId") != null) {
             return isSubscriptionExpiredSession(session)
                     ? "redirect:/subscription-payment"
                     : "redirect:/rest";
@@ -69,8 +70,9 @@ public class RestaurantAuthController {
     }
 
     @GetMapping("/login")
-    public String loginPage(HttpSession session) {
-        if (session.getAttribute("restaurantUserId") != null) {
+    public String loginPage(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("restaurantUserId") != null) {
             return isSubscriptionExpiredSession(session)
                     ? "redirect:/subscription-payment"
                     : "redirect:/rest";
@@ -106,8 +108,9 @@ public class RestaurantAuthController {
     }
 
     @GetMapping("/signup")
-    public String signupPage(HttpSession session) {
-        if (session.getAttribute("restaurantUserId") != null) {
+    public String signupPage(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("restaurantUserId") != null) {
             return isSubscriptionExpiredSession(session)
                     ? "redirect:/subscription-payment"
                     : "redirect:/rest";
@@ -116,8 +119,9 @@ public class RestaurantAuthController {
     }
 
     @GetMapping("/registration")
-    public String registrationAlias(HttpSession session) {
-        if (session.getAttribute("restaurantUserId") != null) {
+    public String registrationAlias(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("restaurantUserId") != null) {
             return isSubscriptionExpiredSession(session)
                     ? "redirect:/subscription-payment"
                     : "redirect:/rest";
@@ -314,8 +318,9 @@ public class RestaurantAuthController {
     }
 
     @GetMapping("/forgot-password")
-    public String forgotPasswordPage(HttpSession session) {
-        if (session.getAttribute("restaurantUserId") != null) {
+    public String forgotPasswordPage(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("restaurantUserId") != null) {
             return isSubscriptionExpiredSession(session)
                     ? "redirect:/subscription-payment"
                     : "redirect:/rest";
