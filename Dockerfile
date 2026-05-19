@@ -9,7 +9,7 @@ RUN mvn -B -q -DskipTests package && \
     JAR_PATH="$(ls target/*.jar | grep -v '\.original$' | head -n 1)" && \
     cp "${JAR_PATH}" /tmp/app.jar
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
 COPY --from=build /tmp/app.jar /app/app.jar
