@@ -50,7 +50,7 @@ if (upiPayeeId == null || upiPayeeId.trim().isEmpty()) {
     upiPayeeId = "gayatrimemberassociation@oksbi";
 }
 if (upiPayeeName == null || upiPayeeName.trim().isEmpty()) {
-    upiPayeeName = "Gayatri Member Association";
+    upiPayeeName = "sss";
 }
 if (transactionId == null) {
     transactionId = "";

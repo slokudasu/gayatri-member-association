@@ -9,11 +9,11 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.gayatri</groupId>
-	<artifactId>Gayatri-Member-Association</artifactId>
+	<artifactId>sss</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
-	<name>Gayatri-Member-Association</name>
-	<description>Gayatri Member Association</description>
+	<name>sss</name>
+	<description>sss</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

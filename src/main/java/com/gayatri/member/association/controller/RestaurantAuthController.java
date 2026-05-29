@@ -44,7 +44,7 @@ import jakarta.servlet.http.HttpSession;
 public class RestaurantAuthController {
 
     private static final String UPI_PAYEE_ID = "9666705710@ybl";
-    private static final String UPI_PAYEE_NAME = "Gayatri Member Association";
+    private static final String UPI_PAYEE_NAME = "sss";
     private static final String PAYMENT_MODE_MANUAL = "MANUAL";
     private static final String PAYMENT_MODE_SCAN = "SCAN";
     private static final String PAYMENT_MODE_UPI_INTENT = "UPI_INTENT";
