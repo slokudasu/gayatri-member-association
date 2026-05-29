@@ -77,7 +77,7 @@
             <td>${year}</td>
             <td>${month}</td>
             <td>${amount}</td>
-            <td>Paid</td>
+            <td>${status}</td>
           </tr>
         </tbody>
       </table>

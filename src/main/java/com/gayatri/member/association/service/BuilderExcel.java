@@ -18,6 +18,10 @@ import com.gayatri.member.association.entity.Builder;
 @Service
 public class BuilderExcel {
 
+	private static String safeString(String value) {
+		return value == null ? "" : value;
+	}
+
     public ByteArrayInputStream export(List<Builder> members) throws IOException {
         String[] columns = {"Builder Name", "Amount", "Status" ,"Construction Plot No","Updated Date"};
 
@@ -35,11 +39,11 @@ public class BuilderExcel {
             int rowIdx = 1;
             for (Builder mem : members) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(mem.getBuilderName());
+                row.createCell(0).setCellValue(safeString(mem.getBuilderName()));
                 row.createCell(1).setCellValue(mem.getAmount());
-                row.createCell(2).setCellValue(mem.getStatus());
-                row.createCell(3).setCellValue(mem.getPlotNumber());              
-                row.createCell(4).setCellValue(mem.getCreationDateTime().toString());
+                row.createCell(2).setCellValue(safeString(mem.getStatus()));
+                row.createCell(3).setCellValue(safeString(mem.getPlotNumber()));
+                row.createCell(4).setCellValue(mem.getCreationDateTime() == null ? "" : mem.getCreationDateTime().toString());
             }
 
             workbook.write(out);

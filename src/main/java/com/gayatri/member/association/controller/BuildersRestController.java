@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gayatri.member.association.entity.Builder;
@@ -52,8 +53,13 @@ public class BuildersRestController {
 	}
 	
 	@GetMapping("/downloadExcel")
-    public ResponseEntity<InputStreamResource> downloadExcel() throws Exception {
-        List<Builder> buildetsData = buildersService.fetch();
+    public ResponseEntity<InputStreamResource> downloadExcel(@RequestParam(required = false) String status) throws Exception {
+        List<Builder> buildetsData;
+        if (status != null && !status.isBlank()) {
+        	buildetsData = buildersService.findByStatus(status);
+        } else {
+        	buildetsData = buildersService.fetch();
+        }
 
         ByteArrayInputStream in = builderExcel.export(buildetsData);
 
@@ -61,7 +67,7 @@ public class BuildersRestController {
         headers.add("Content-Disposition", "attachment; filename=Builders.xlsx");
         return ResponseEntity.ok()
                 .headers(headers)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(in));
     }
 	

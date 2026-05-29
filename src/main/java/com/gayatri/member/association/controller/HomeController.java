@@ -79,6 +79,7 @@ public class HomeController {
 				 model.addAttribute("year", data.get().getYear());
 				 model.addAttribute("amount", data.get().getAmount());
 				 model.addAttribute("date", data.get().getCreationDateTime());
+				 model.addAttribute("status", data.get().getStatus());
 				 
 				 LocalDate date = LocalDate.parse(data.get().getCreationDateTime().toString());
 

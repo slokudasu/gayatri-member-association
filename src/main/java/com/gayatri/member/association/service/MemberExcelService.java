@@ -18,6 +18,10 @@ import com.gayatri.member.association.entity.Member;
 @Service
 public class MemberExcelService {
 
+	private static String safeString(String value) {
+		return value == null ? "" : value;
+	}
+
     public ByteArrayInputStream export(List<Member> members) throws IOException {
         String[] columns = {"Name", "Mobile Number", "Member Type" ,"Membership","Membership Amount"};
 
@@ -35,9 +39,10 @@ public class MemberExcelService {
             int rowIdx = 1;
             for (Member mem : members) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(mem.getFirstName()+" "+mem.getLastName());
-                row.createCell(1).setCellValue(mem.getMobileNumber());
-                row.createCell(2).setCellValue(mem.getMemberType());
+                String fullName = (safeString(mem.getFirstName()) + " " + safeString(mem.getLastName())).trim();
+                row.createCell(0).setCellValue(fullName);
+                row.createCell(1).setCellValue(safeString(mem.getMobileNumber()));
+                row.createCell(2).setCellValue(safeString(mem.getMemberType()));
                 if(mem.isMemberShipFlag()) {
                 	row.createCell(3).setCellValue("Yes");
                 } else {

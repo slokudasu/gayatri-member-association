@@ -99,7 +99,7 @@ public class MaintenanceRestController {
     public ResponseEntity<InputStreamResource> downloadExcel(@RequestParam(required = false) Long memberId,@RequestParam(required = false) String year,
     		@RequestParam(required = false) String month,
     		@RequestParam(required = false) String status) throws Exception {
-        List<Maintenance> paidList  = null;
+        List<Maintenance> paidList  = new ArrayList<>();
         MaintenanceSearchRequest maintenanceSearchRequest = new MaintenanceSearchRequest();
         maintenanceSearchRequest.setMemberId(memberId);
         maintenanceSearchRequest.setYear(year);
@@ -113,9 +113,10 @@ public class MaintenanceRestController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	    List<Maintenance> finalList = new ArrayList();
+	    List<Maintenance> finalList = new ArrayList<>();
+		boolean hasYearAndMonth = year != null && !year.isBlank() && month != null && !month.isBlank();
 
-		if(!year.isEmpty() && !month.isEmpty()) {
+		if(hasYearAndMonth) {
 			List<Member> allMembers = memberService.fetchMembers();
 			
 			// 3. Convert paid to map for faster lookup
@@ -158,7 +159,7 @@ public class MaintenanceRestController {
         headers.add("Content-Disposition", "attachment; filename=maintenance.xlsx");
         return ResponseEntity.ok()
                 .headers(headers)	
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(in));
         
         

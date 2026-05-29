@@ -23,6 +23,9 @@ import com.gayatri.member.association.entity.Maintenance;
 @Service
 public class MaintenanceExcelService {
 
+	private static String safeString(String value) {
+		return value == null ? "" : value;
+	}
 
     public ByteArrayInputStream export(List<Maintenance> maintenance) throws IOException {
         String[] columns = {"Member Name", "Year", "Month", "Amount", "Status"};
@@ -59,11 +62,11 @@ public class MaintenanceExcelService {
             int rowIdx = 1;
             for (Maintenance main : maintenance) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(main.getMemberName());
-                row.createCell(1).setCellValue(main.getYear());
-                row.createCell(2).setCellValue(main.getMonth());
+                row.createCell(0).setCellValue(safeString(main.getMemberName()));
+                row.createCell(1).setCellValue(safeString(main.getYear()));
+                row.createCell(2).setCellValue(safeString(main.getMonth()));
                 row.createCell(3).setCellValue(main.getAmount());
-                row.createCell(4).setCellValue(main.getStatus());
+                row.createCell(4).setCellValue(safeString(main.getStatus()));
             }
 
             workbook.write(out);
