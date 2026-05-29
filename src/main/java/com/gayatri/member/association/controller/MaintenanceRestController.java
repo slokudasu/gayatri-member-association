@@ -128,12 +128,23 @@ public class MaintenanceRestController {
     }
 
 	private List<Maintenance> resolveMaintenanceSearchData(Long memberId, String year, String month, String status) {
-		boolean hasYearAndMonth = hasText(year) && hasText(month);
-		boolean allMembersYearMonthView = hasYearAndMonth;
-		if (!allMembersYearMonthView) {
+		boolean hasYear = hasText(year);
+		boolean hasMonth = hasText(month);
+		boolean allMembersYearMonthView = hasYear && hasMonth;
+		boolean allMembersYearView = hasYear && !hasMonth;
+		if (allMembersYearMonthView) {
+			return buildAllMembersMonthStatus(year, month, status);
+		}
+		if (allMembersYearView) {
+			return buildAllMembersYearStatus(year, status);
+		}
+		if (memberId != null) {
 			return fetchMaintenanceByFilters(memberId, year, month, status);
 		}
+		return fetchMaintenanceByFilters(null, year, month, status);
+	}
 
+	private List<Maintenance> buildAllMembersMonthStatus(String year, String month, String status) {
 		List<Maintenance> monthRecords = fetchMaintenanceByFilters(null, year, month, null);
 		Map<Long, Maintenance> monthMap = monthRecords.stream()
 				.collect(Collectors.toMap(Maintenance::getMemberId, m -> m, this::pickPreferredMaintenance));
@@ -160,13 +171,50 @@ public class MaintenanceRestController {
 			}
 			allMemberStatus.add(dto);
 		}
+		return applyStatusFilter(allMemberStatus, status);
+	}
 
-		if (hasText(status)) {
-			return allMemberStatus.stream()
-					.filter(m -> status.equalsIgnoreCase(m.getStatus()))
-					.collect(Collectors.toList());
+	private List<Maintenance> buildAllMembersYearStatus(String year, String status) {
+		List<Maintenance> yearRecords = fetchMaintenanceByFilters(null, year, null, null);
+		Map<Long, List<Maintenance>> recordsByMember = yearRecords.stream()
+				.collect(Collectors.groupingBy(Maintenance::getMemberId));
+
+		List<Maintenance> allMemberStatus = new ArrayList<>();
+		for (Member member : memberService.fetchMembers()) {
+			Maintenance dto = new Maintenance();
+			dto.setMemberId(member.getMemberId());
+			String firstName = member.getFirstName() == null ? "" : member.getFirstName();
+			String lastName = member.getLastName() == null ? "" : member.getLastName();
+			dto.setMemberName((firstName + " " + lastName).trim());
+			dto.setYear(year);
+			dto.setMonth("Year Summary");
+
+			List<Maintenance> memberYearRecords = recordsByMember.get(member.getMemberId());
+			if (memberYearRecords == null || memberYearRecords.isEmpty()) {
+				dto.setAmount(0.0);
+				dto.setStatus("Unpaid");
+			} else {
+				double paidAmount = memberYearRecords.stream()
+						.filter(r -> "Paid".equalsIgnoreCase(r.getStatus()))
+						.mapToDouble(Maintenance::getAmount)
+						.sum();
+				boolean isPaid = memberYearRecords.stream()
+						.anyMatch(r -> "Paid".equalsIgnoreCase(r.getStatus()));
+				dto.setAmount(paidAmount);
+				dto.setStatus(isPaid ? "Paid" : "Unpaid");
+			}
+			allMemberStatus.add(dto);
 		}
-		return allMemberStatus;
+		return applyStatusFilter(allMemberStatus, status);
+	}
+
+	private List<Maintenance> applyStatusFilter(List<Maintenance> data, String status) {
+		if (!hasText(status)) {
+			return data;
+		}
+		return data.stream()
+				.filter(m -> status.equalsIgnoreCase(m.getStatus()))
+				.collect(Collectors.toList());
 	}
 
 	private List<Maintenance> fetchMaintenanceByFilters(Long memberId, String year, String month, String status) {
