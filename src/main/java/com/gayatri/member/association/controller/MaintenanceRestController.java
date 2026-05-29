@@ -94,60 +94,21 @@ public class MaintenanceRestController {
         return  maintenanceService.findByMemberIdAndYear(memberId , year);
 		
 	}
+
+	@GetMapping("/search")
+	public List<Maintenance> search(
+			@RequestParam(required = false) Long memberId,
+			@RequestParam(required = false) String year,
+			@RequestParam(required = false) String month,
+			@RequestParam(required = false) String status) {
+		return resolveMaintenanceSearchData(memberId, year, month, status);
+	}
 	
 	@GetMapping("/downloadExcel")
     public ResponseEntity<InputStreamResource> downloadExcel(@RequestParam(required = false) Long memberId,@RequestParam(required = false) String year,
-    		@RequestParam(required = false) String month,
-    		@RequestParam(required = false) String status) throws Exception {
-        List<Maintenance> paidList  = new ArrayList<>();
-        MaintenanceSearchRequest maintenanceSearchRequest = new MaintenanceSearchRequest();
-        maintenanceSearchRequest.setMemberId(memberId);
-        maintenanceSearchRequest.setYear(year);
-        maintenanceSearchRequest.setMonth(month);
-        maintenanceSearchRequest.setStatus(status);
-		try {
-			Specification<Maintenance> spec = MaintenanceSpecification.filter(maintenanceSearchRequest);	        
-			paidList  = maintenanceExcelServiceDao.findAll(spec);
-			
-	       
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	    List<Maintenance> finalList = new ArrayList<>();
-		boolean hasYearAndMonth = year != null && !year.isBlank() && month != null && !month.isBlank();
-
-		if(hasYearAndMonth) {
-			List<Member> allMembers = memberService.fetchMembers();
-			
-			// 3. Convert paid to map for faster lookup
-		    Map<Long, Maintenance> paidMap = paidList.stream()
-		            .collect(Collectors.toMap(Maintenance::getMemberId, m -> m));
-			
-		    
-		 // 5. Loop through all members
-		    for (Member member : allMembers) {
-		    	Maintenance dto = new Maintenance();
-		        dto.setMemberId(member.getMemberId());
-		        dto.setMemberName(member.getFirstName() +" "+member.getLastName());
-		        dto.setYear(year);
-		        dto.setMonth(month);
-
-		        if (paidMap.containsKey(member.getMemberId())) {
-		            // Member PAID
-		            Maintenance m = paidMap.get(member.getMemberId());
-		            dto.setAmount(m.getAmount());
-		            dto.setStatus("Paid");
-		        } else {
-		            // Member UNPAID
-		            dto.setAmount(0.0);
-		            dto.setStatus("Unpaid");
-		        }
-
-		        finalList.add(dto);
-		    }
-		} else {
-			finalList = paidList;
-		}
+     		@RequestParam(required = false) String month,
+     		@RequestParam(required = false) String status) throws Exception {
+        List<Maintenance> finalList = resolveMaintenanceSearchData(memberId, year, month, status);
 		
 		
 		
@@ -160,10 +121,82 @@ public class MaintenanceRestController {
         return ResponseEntity.ok()
                 .headers(headers)	
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(new InputStreamResource(in));
-        
-        
-        
+                 .body(new InputStreamResource(in));
+         
+         
+         
     }
+
+	private List<Maintenance> resolveMaintenanceSearchData(Long memberId, String year, String month, String status) {
+		boolean hasYearAndMonth = hasText(year) && hasText(month);
+		boolean allMembersYearMonthView = hasYearAndMonth;
+		if (!allMembersYearMonthView) {
+			return fetchMaintenanceByFilters(memberId, year, month, status);
+		}
+
+		List<Maintenance> monthRecords = fetchMaintenanceByFilters(null, year, month, null);
+		Map<Long, Maintenance> monthMap = monthRecords.stream()
+				.collect(Collectors.toMap(Maintenance::getMemberId, m -> m, this::pickPreferredMaintenance));
+
+		List<Maintenance> allMemberStatus = new ArrayList<>();
+		for (Member member : memberService.fetchMembers()) {
+			Maintenance dto = new Maintenance();
+			dto.setMemberId(member.getMemberId());
+			String firstName = member.getFirstName() == null ? "" : member.getFirstName();
+			String lastName = member.getLastName() == null ? "" : member.getLastName();
+			dto.setMemberName((firstName + " " + lastName).trim());
+			dto.setYear(year);
+			dto.setMonth(month);
+
+			Maintenance record = monthMap.get(member.getMemberId());
+			if (record != null) {
+				dto.setId(record.getId());
+				dto.setCreationDateTime(record.getCreationDateTime());
+				dto.setAmount(record.getAmount());
+				dto.setStatus(hasText(record.getStatus()) ? record.getStatus() : "Unpaid");
+			} else {
+				dto.setAmount(0.0);
+				dto.setStatus("Unpaid");
+			}
+			allMemberStatus.add(dto);
+		}
+
+		if (hasText(status)) {
+			return allMemberStatus.stream()
+					.filter(m -> status.equalsIgnoreCase(m.getStatus()))
+					.collect(Collectors.toList());
+		}
+		return allMemberStatus;
+	}
+
+	private List<Maintenance> fetchMaintenanceByFilters(Long memberId, String year, String month, String status) {
+		MaintenanceSearchRequest maintenanceSearchRequest = new MaintenanceSearchRequest();
+		maintenanceSearchRequest.setMemberId(memberId);
+		maintenanceSearchRequest.setYear(year);
+		maintenanceSearchRequest.setMonth(month);
+		maintenanceSearchRequest.setStatus(status);
+		Specification<Maintenance> spec = MaintenanceSpecification.filter(maintenanceSearchRequest);
+		return maintenanceExcelServiceDao.findAll(spec);
+	}
+
+	private Maintenance pickPreferredMaintenance(Maintenance existing, Maintenance replacement) {
+		if (replacement == null) {
+			return existing;
+		}
+		if (existing == null) {
+			return replacement;
+		}
+		if (replacement.getCreationDateTime() == null) {
+			return existing;
+		}
+		if (existing.getCreationDateTime() == null || replacement.getCreationDateTime().after(existing.getCreationDateTime())) {
+			return replacement;
+		}
+		return existing;
+	}
+
+	private boolean hasText(String value) {
+		return value != null && !value.isBlank();
+	}
 	
 }

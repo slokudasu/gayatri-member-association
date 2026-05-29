@@ -7,13 +7,14 @@
  
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/association-common.css">
   <script src="/js/jquery.min.js"></script>
   <script src="/js/bootstrap.min.js"></script>
   <script type="text/javascript" src="/js/jquery.canvasjs.min.js"></script>
 </head>
 <body>
 
-<div class="container-fluid">
+<div class="container-fluid page-shell">
  
   <form autocomplete="off">
  

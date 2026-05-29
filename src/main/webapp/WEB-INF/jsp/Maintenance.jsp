@@ -7,6 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/association-common.css">
   <script src="/js/jquery.min.js"></script>
   <script src="/js/bootstrap.min.js"></script>
   <style>
@@ -577,14 +578,25 @@ $(function () {
     var memberSelection = parseMemberSelection($("#memberId").val());
     var memberId = memberSelection ? memberSelection.memberId : "";
     var year = $("#year").val();
-
-    var url = "/maintenance/fetch";
+    var month = $("#month").val() || "";
+    var status = $("#status").val() || "";
+    var queryParams = [];
     if (memberId !== "") {
-      if (year !== "") {
-        url = "/maintenance/fetch/" + memberId + "/" + year;
-      } else {
-        url = "/maintenance/fetch/" + memberId;
-      }
+      queryParams.push("memberId=" + encodeURIComponent(memberId));
+    }
+    if (year !== "") {
+      queryParams.push("year=" + encodeURIComponent(year));
+    }
+    if (month !== "") {
+      queryParams.push("month=" + encodeURIComponent(month));
+    }
+    if (status !== "") {
+      queryParams.push("status=" + encodeURIComponent(status));
+    }
+
+    var url = "/maintenance/search";
+    if (queryParams.length > 0) {
+      url += "?" + queryParams.join("&");
     }
 
     $.ajax({
@@ -600,10 +612,18 @@ $(function () {
         $.each(data, function (index, item) {
           var amount = Number(item.amount || 0);
           totalMaintenanceAmount += amount;
+          var hasRecordId = item.id !== null && item.id !== undefined && String(item.id).trim() !== "";
 
           var statusBadge = item.status === "Paid"
             ? '<span class="label label-success">Paid</span>'
             : '<span class="label label-danger">' + escapeHtml(item.status || "Unpaid") + '</span>';
+
+          var actionButtons = "";
+          if (hasRecordId) {
+            actionButtons = '<button type="button" class="btn btn-success btn-sm js-edit-maintenance" data-id="' + item.id + '"><span class="glyphicon glyphicon-pencil"></span></button>'
+              + '<button type="button" class="btn btn-danger btn-sm js-delete-maintenance" data-id="' + item.id + '"><span class="glyphicon glyphicon-trash"></span></button>'
+              + '<button type="button" class="btn btn-info btn-sm js-print-maintenance" data-id="' + item.id + '"><span class="glyphicon glyphicon-print"></span></button>';
+          }
 
           trHTML += '<tr>'
             + '<td>' + (index + 1) + '</td>'
@@ -613,9 +633,7 @@ $(function () {
             + '<td>' + amount + '</td>'
             + '<td>' + statusBadge + '</td>'
             + '<td class="table-action-buttons">'
-            + '<button type="button" class="btn btn-success btn-sm js-edit-maintenance" data-id="' + item.id + '"><span class="glyphicon glyphicon-pencil"></span></button>'
-            + '<button type="button" class="btn btn-danger btn-sm js-delete-maintenance" data-id="' + item.id + '"><span class="glyphicon glyphicon-trash"></span></button>'
-            + '<button type="button" class="btn btn-info btn-sm js-print-maintenance" data-id="' + item.id + '"><span class="glyphicon glyphicon-print"></span></button>'
+            + actionButtons
             + '</td>'
             + '</tr>';
         });
